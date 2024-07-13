@@ -1,0 +1,2 @@
+what if not pixels, but block itself?
+ex. 100x100 room would be 100 blocks each side
