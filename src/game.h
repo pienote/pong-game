@@ -1,6 +1,12 @@
 #ifndef GAME_H
 #define GAME_H
 
+enum Mode
+{
+    PLAYING,
+    WIN_SCREEN
+};
+
 namespace Game
 {
     struct State
@@ -24,6 +30,7 @@ namespace Game
     const int P1_X = 64;
     const int P2_X = 800 - 64 - PADDLE_WIDTH;
     const int VELOCITY = 4;
+    const int WIN_AMOUNT = 3;
 
     void resetPositions();
     void init();
@@ -35,6 +42,7 @@ namespace Game
     void handleInputs();
     void checkForCollisions();
     void updatePositions();
+    void checkForWin();
 };
 
 #endif

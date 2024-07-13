@@ -1,11 +1,13 @@
 #include <raylib.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "game.h"
 
-
+Mode mode;
 Game::State gs; // State of the game
 Rectangle topClip, bottomClip, leftGoal, rightGoal;
+char winnerText[64];
 
 void Game::resetPositions()
 {
@@ -61,6 +63,7 @@ void Game::init()
 
 void Game::loop()
 {
+    mode = PLAYING;
     while(!WindowShouldClose())
     {
         update();
@@ -72,8 +75,17 @@ void Game::loop()
 void Game::update()
 {
     handleInputs();
-    updatePositions();
-    checkForCollisions();
+    switch(mode) 
+    {
+        case PLAYING:
+            updatePositions();
+            checkForCollisions();
+            checkForWin();
+            break;
+        case WIN_SCREEN:
+        default:
+            break;
+    }
 }
 
 void Game::render()
@@ -81,19 +93,26 @@ void Game::render()
     BeginDrawing();
         ClearBackground(BLACK);
 
+        switch (mode)
+        {
+            case PLAYING:
+                // paddles
+                DrawRectangle(P1_X, gs.p1_y, PADDLE_WIDTH, PADDLE_HEIGHT, WHITE);
+                DrawRectangle(P2_X, gs.p2_y, PADDLE_WIDTH, PADDLE_HEIGHT, WHITE);
 
-        // paddles
-        DrawRectangle(P1_X, gs.p1_y, PADDLE_WIDTH, PADDLE_HEIGHT, WHITE);
-        DrawRectangle(P2_X, gs.p2_y, PADDLE_WIDTH, PADDLE_HEIGHT, WHITE);
+                // ball
+                DrawRectangle(gs.bx, gs.by, BALL_SIZE, BALL_SIZE, RED);
 
-        // ball
-        DrawRectangle(gs.bx, gs.by, BALL_SIZE, BALL_SIZE, RED);
-
-        // score
-        DrawText(TextFormat("%d", gs.p1_score), P1_X + (PADDLE_WIDTH * 2), 64, PADDLE_WIDTH, GREEN);
-        DrawText(TextFormat("%d", gs.p2_score), P2_X - (PADDLE_WIDTH * 2), 64, PADDLE_WIDTH, GREEN);
-
-
+                // score
+                DrawText(TextFormat("%d", gs.p1_score), P1_X + (PADDLE_WIDTH * 2), 64, PADDLE_WIDTH, GREEN);
+                DrawText(TextFormat("%d", gs.p2_score), P2_X - (PADDLE_WIDTH * 2), 64, PADDLE_WIDTH, GREEN);
+                break;
+            case WIN_SCREEN:
+                DrawText(winnerText, 0, 0, 20, WHITE);
+                break;
+            default:
+                break;
+        }
     EndDrawing();
 }
 
@@ -104,19 +123,35 @@ void Game::close()
 
 void Game::handleInputs()
 {
-    if(IsKeyDown(KEY_W))
-        gs.p1_dy = -VELOCITY;
-    else if(IsKeyDown(KEY_S))
-        gs.p1_dy = VELOCITY;
-    else
-        gs.p1_dy = 0;
+    switch (mode)
+    {
+        case PLAYING:
+            if(IsKeyDown(KEY_W))
+                gs.p1_dy = -VELOCITY;
+            else if(IsKeyDown(KEY_S))
+                gs.p1_dy = VELOCITY;
+            else
+                gs.p1_dy = 0;
 
-    if(IsKeyDown(KEY_UP))
-        gs.p2_dy = -VELOCITY;
-    else if(IsKeyDown(KEY_DOWN))
-        gs.p2_dy = VELOCITY;
-    else
-        gs.p2_dy = 0;
+            if(IsKeyDown(KEY_UP))
+                gs.p2_dy = -VELOCITY;
+            else if(IsKeyDown(KEY_DOWN))
+                gs.p2_dy = VELOCITY;
+            else
+                gs.p2_dy = 0;
+
+            break;
+        case WIN_SCREEN:
+            if(IsKeyPressed(KEY_SPACE))
+            {
+                TraceLog(LOG_INFO, "Resetting the game.");
+                mode = PLAYING;
+                resetPositions();
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 void Game::checkForCollisions()
@@ -191,3 +226,16 @@ void Game::updatePositions()
     gs.p2_y += gs.p2_dy;
 }
 
+void Game::checkForWin()
+{
+    if(gs.p1_score >= WIN_AMOUNT)
+    {
+        strcpy(winnerText, "Player 1 Won!");
+        mode = WIN_SCREEN;
+    }
+    if(gs.p2_score >= WIN_AMOUNT)
+    {
+        strcpy(winnerText, "Player 2 Won!");
+        mode = WIN_SCREEN;
+    }
+}
