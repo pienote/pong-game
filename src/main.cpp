@@ -1,9 +1,11 @@
-#include "game.h"
+#include <stdlib.h>
+#include <time.h>
 
-Game g;
+#include "game.h"
 
 int main(int argc, char** argv)
 {
-    g.init();
+    srand(time(NULL));
+    Game::init();
     return 0;
 }
